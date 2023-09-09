@@ -1,0 +1,11 @@
+[Unit]
+Description=Galacticraft server
+
+[Service]
+ExecStart=python3 /galacticraft/runner/src/main.py
+Restart=always
+User=ben
+Group=ben
+
+[Install]
+WantedBy=multi-user.target
