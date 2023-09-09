@@ -1,4 +1,4 @@
-from typing import Optional, TextIO
+from typing import Optional, TextIO, List
 import subprocess
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -111,12 +111,13 @@ class Server:
     def should_run(self) -> bool:
         return not self.killed and self.server_alive()
 
-    def wait_for_output(self, success_msg: str, timeout: float = 30) -> None:
+    def wait_for_output(self, success_msg: str, timeout: float = 30, return_next_line: bool = False) -> str:
         logger.info(f'Waiting for msg: {success_msg}')
         lines = 1
         output = ''
         wait_start: Optional[int] = None
-        while success_msg not in output:
+        found = False
+        while return_next_line or success_msg not in output:
             if not self.server_alive() or self.killed:
                 raise Exception('Killed or died while waiting')
             output = self.server_log.readline()
@@ -131,6 +132,10 @@ class Server:
                             f'Timed out while waiting for output: {success_msg}')
                 time.sleep(1)
             else:
+                if found:
+                    return output
+                if success_msg in output:
+                    found = True
                 wait_start = None
                 lines += 1
                 if lines >= MAX_LINES:
@@ -138,17 +143,32 @@ class Server:
                         self.process.kill()
                     raise Exception(
                         f'Exceeded {MAX_LINES} logs before finding desired output: "{success_msg}"')
+        return output
 
-    def send_command(self, command: str, success_msg: str):
+    def send_command(self, command: str, success_msg: str, return_next_line: bool = False) -> str:
+        logger.info(f'Running command: {command}')
         self.process.stdin.write(f'{command}\n')
         self.process.stdin.flush()
-        self.wait_for_output(success_msg)
+        return self.wait_for_output(success_msg, return_next_line=return_next_line)
 
     def save_game(self) -> None:
         self.send_command('save-off', 'Turned off world auto-saving')
         self.send_command('save-all', 'Saved the world')
         backup.take_backup(config['save_path'], config['backup_path'])
         self.send_command('save-on', 'Turned on world auto-saving')
+
+    def get_players(self) -> List[str]:
+        MARKER = 'DedicatedServer]:'
+
+        output = self.send_command('list', ' players online:', True)
+        si = output.find(MARKER)
+        if si < 0:
+            logger.error(f'Failed to find player list in output: {output}')
+            return []
+
+        line = output[si+len(MARKER):]
+        players = [s.strip() for s in line.split(' ')]
+        return [p for p in players if p]
 
 
 def start_game() -> subprocess.Popen:
@@ -182,12 +202,13 @@ def lifetime() -> bool:
     time.sleep(3)
     with open('logs/latest.log', 'r') as logs:
         minecraft = Server(process, logs)
-        minecraft.wait_for_output('DedicatedServer]: Done', 180)
+        minecraft.wait_for_output('DedicatedServer]: Done', timeout=180)
         logger.info('Minecraft started')
 
         try:
             last_save_time = datetime.datetime.now().timestamp()
             last_phrase_time = datetime.datetime.now().timestamp()
+            last_item_time = datetime.datetime.now().timestamp()
 
             while minecraft.should_run():
                 minecraft.sleep(600)  # 10 minutes
@@ -202,10 +223,30 @@ def lifetime() -> bool:
                     logger.info('Save complete')
 
                 if datetime.datetime.now().timestamp() - last_phrase_time >= config['phrase_interval']:
-                    if random.randrange(0, 100) < 30:
+                    if config['phrases'] and random.randrange(0, 100) < 30:
                         last_phrase_time = datetime.datetime.now().timestamp()
                         phrase = random.choice(config['phrases'])
                         minecraft.send_command(f'say {phrase}', '')
+
+                if datetime.datetime.now().timestamp() - last_item_time >= config['random_item_interval']:
+                    if config['random_items'] and random.randrange(0, 100) <= 55:
+                        players = minecraft.get_players()
+                        if players:
+                            last_item_time = datetime.datetime.now().timestamp()
+                            item = random.choices(
+                                population=config['random_items'],
+                                weights=[item['weight']
+                                         for item in config['random_items']],
+                                k=1
+                            )[0]
+                            name = item['name']
+                            qty = random.randrange(
+                                item['min_qty'], item['max_qty'] + 1)
+                            player = random.choice(players)
+                            minecraft.send_command(
+                                f'tell {player} Keep this between us baby', '')
+                            minecraft.send_command(
+                                f'give {player} {name} {qty}', '')
 
         except Exception:
             logger.exception('Got exception while running')
@@ -224,7 +265,8 @@ def main():
 
     config = load_config()
     os.chdir(config['server_path'])
-    logger = setup_logger(os.path.join(config['server_path'], 'manager_logs'), 'manager.log')
+    logger = setup_logger(os.path.join(
+        config['server_path'], 'manager_logs'), 'manager.log')
 
     logger.info('Starting manager')
     write_pid()

@@ -4,6 +4,13 @@ import json
 import logging
 
 
+class RandomItem(TypedDict):
+    name: str
+    weight: float
+    min_qty: int
+    max_qty: int
+
+
 class Config(TypedDict):
     server_path: str
     start_command: List[str]
@@ -14,6 +21,9 @@ class Config(TypedDict):
 
     phrase_interval: int
     phrases: List[str]
+
+    random_items: List[RandomItem]
+    random_item_interval: int
 
 
 DEFAULT_CONFIG: Config = {
@@ -40,6 +50,58 @@ DEFAULT_CONFIG: Config = {
         'From the spice mines of Emperor Charizard',
         'If you love Corncob TV shows, it\'s time to tell Spectrum, "No."',
         'I don\'t even want to be around anymore'
+    ],
+
+    'random_item_interval': 30 * 60,
+    'random_items': [
+        {
+            'name': 'minecraft:fish',
+            'weight': 15,
+            'min_qty': 1,
+            'max_qty': 4
+        },
+        {
+            'name': 'minecraft:rotten_flesh',
+            'weight': 15,
+            'min_qty': 1,
+            'max_qty': 4
+        },
+        {
+            'name': 'minecraft:grass',
+            'weight': 15,
+            'min_qty': 1,
+            'max_qty': 1
+        },
+        {
+            'name': 'minecraft:string',
+            'weight': 15,
+            'min_qty': 1,
+            'max_qty': 4
+        },
+        {
+            'name': 'minecraft:beetroot',
+            'weight': 15,
+            'min_qty': 1,
+            'max_qty': 4
+        },
+        {
+            'name': 'minecraft:poisonous_potato',
+            'weight': 15,
+            'min_qty': 1,
+            'max_qty': 1
+        },
+        {
+            'name': 'minecraft:egg',
+            'weight': 15,
+            'min_qty': 1,
+            'max_qty': 4
+        },
+        {
+            'name': 'minecraft:diamond',
+            'weight': 1,
+            'min_qty': 1,
+            'max_qty': 4
+        },
     ]
 }
 
