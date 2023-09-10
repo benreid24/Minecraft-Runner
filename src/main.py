@@ -211,7 +211,7 @@ def lifetime() -> bool:
             last_item_time = datetime.datetime.now().timestamp()
 
             while minecraft.should_run():
-                minecraft.sleep(600)  # 10 minutes
+                minecraft.sleep(300)  # 5 minutes
                 if not minecraft.should_run():
                     logger.info('Got stop command')
                     break
@@ -223,13 +223,13 @@ def lifetime() -> bool:
                     logger.info('Save complete')
 
                 if datetime.datetime.now().timestamp() - last_phrase_time >= config['phrase_interval']:
-                    if config['phrases'] and random.randrange(0, 100) < 30:
+                    if config['phrases'] and random.randrange(0, 100) < 40:
                         last_phrase_time = datetime.datetime.now().timestamp()
                         phrase = random.choice(config['phrases'])
                         minecraft.send_command(f'say {phrase}', '')
 
                 if datetime.datetime.now().timestamp() - last_item_time >= config['random_item_interval']:
-                    if config['random_items'] and random.randrange(0, 100) <= 55:
+                    if config['random_items'] and random.randrange(0, 100) <= 70:
                         players = minecraft.get_players()
                         if players:
                             last_item_time = datetime.datetime.now().timestamp()
