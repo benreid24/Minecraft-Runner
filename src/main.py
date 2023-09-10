@@ -221,6 +221,7 @@ def lifetime() -> bool:
                     logger.info('Saving game')
                     minecraft.save_game()
                     logger.info('Save complete')
+                    time.sleep(3)
 
                 if datetime.datetime.now().timestamp() - last_phrase_time >= config['phrase_interval']:
                     if config['phrases'] and random.randrange(0, 100) < 40:
