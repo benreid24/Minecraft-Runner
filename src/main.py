@@ -254,6 +254,12 @@ def lifetime() -> bool:
         finally:
             # Exit gracefully on kill/crash
             logger.info('Stopping')
+            if minecraft.server_alive():
+                try:
+                    logger.info('Performing final save')
+                    minecraft.send_command('save-all', '')
+                except:
+                    pass
             minecraft.stop()
             logger.info('Server stopped')
 
