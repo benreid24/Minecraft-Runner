@@ -51,6 +51,10 @@ logger: logging.Logger = None
 killed = False
 
 
+class CommandTimeout(Exception):
+    pass
+
+
 class Server:
     def __init__(self, process: subprocess.Popen, server_log: TextIO) -> None:
         self.server_log = server_log
@@ -126,10 +130,9 @@ class Server:
                     wait_start = datetime.datetime.now().timestamp()
                 else:
                     if datetime.datetime.now().timestamp() - wait_start > timeout:
-                        if self.server_alive():
-                            self.process.kill()
-                        raise Exception(
-                            f'Timed out while waiting for output: {success_msg}')
+                        raise CommandTimeout(
+                            f'Timed out while waiting for output: {success_msg}'
+                        )
                 time.sleep(1)
             else:
                 if found:
@@ -216,38 +219,45 @@ def lifetime() -> bool:
                     logger.info('Got stop command')
                     break
 
-                if datetime.datetime.now().timestamp() - last_save_time >= config['backup_interval']:
-                    last_save_time = datetime.datetime.now().timestamp()
-                    logger.info('Saving game')
-                    minecraft.save_game()
-                    logger.info('Save complete')
-                    time.sleep(3)
+                try:
+                    if datetime.datetime.now().timestamp() - last_save_time >= config['backup_interval']:
+                        last_save_time = datetime.datetime.now().timestamp()
+                        logger.info('Saving game')
+                        minecraft.save_game()
+                        logger.info('Save complete')
+                        time.sleep(3)
 
-                if datetime.datetime.now().timestamp() - last_phrase_time >= config['phrase_interval']:
-                    if config['phrases'] and random.randrange(0, 100) < 40:
-                        last_phrase_time = datetime.datetime.now().timestamp()
-                        phrase = random.choice(config['phrases'])
-                        minecraft.send_command(f'say {phrase}', '')
+                    if datetime.datetime.now().timestamp() - last_phrase_time >= config['phrase_interval']:
+                        if config['phrases'] and random.randrange(0, 100) < 40:
+                            last_phrase_time = datetime.datetime.now().timestamp()
+                            phrase = random.choice(config['phrases'])
+                            minecraft.send_command(f'say {phrase}', '')
 
-                if datetime.datetime.now().timestamp() - last_item_time >= config['random_item_interval']:
-                    if config['random_items'] and random.randrange(0, 100) <= 70:
-                        players = minecraft.get_players()
-                        if players:
-                            last_item_time = datetime.datetime.now().timestamp()
-                            item = random.choices(
-                                population=config['random_items'],
-                                weights=[item['weight']
-                                         for item in config['random_items']],
-                                k=1
-                            )[0]
-                            name = item['name']
-                            qty = random.randrange(
-                                item['min_qty'], item['max_qty'] + 1)
-                            player = random.choice(players)
-                            minecraft.send_command(
-                                f'tell {player} Keep this between us baby', '')
-                            minecraft.send_command(
-                                f'give {player} {name} {qty}', '')
+                    if datetime.datetime.now().timestamp() - last_item_time >= config['random_item_interval']:
+                        if config['random_items'] and random.randrange(0, 100) <= 70:
+                            players = minecraft.get_players()
+                            if players:
+                                last_item_time = datetime.datetime.now().timestamp()
+                                item = random.choices(
+                                    population=config['random_items'],
+                                    weights=[item['weight']
+                                            for item in config['random_items']],
+                                    k=1
+                                )[0]
+                                name = item['name']
+                                qty = random.randrange(
+                                    item['min_qty'], item['max_qty'] + 1)
+                                player = random.choice(players)
+                                minecraft.send_command(
+                                    f'tell {player} Keep this between us baby', '')
+                                minecraft.send_command(
+                                    f'give {player} {name} {qty}', '')
+                                
+                except CommandTimeout:
+                    logger.exception('Command failed, attempting to continue')
+                    if minecraft.server_alive():
+                        minecraft.send_command('save-all', '')
+                        minecraft.send_command('save-on', '')
 
         except Exception:
             logger.exception('Got exception while running')
