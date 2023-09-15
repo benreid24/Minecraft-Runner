@@ -46,6 +46,8 @@ class Config(TypedDict):
     effect_interval: int
     effect_options: List[Effect]
 
+    creeper_interval: int
+
 
 DEFAULT_CONFIG: Config = {
     'server_path': '/galacticraft',
@@ -200,7 +202,9 @@ DEFAULT_CONFIG: Config = {
             'level': 1,
             'message': 'Someone tell {player} to open their eyes!'
         },
-    ]
+    ],
+
+    'creeper_interval': 3600
 }
 
 

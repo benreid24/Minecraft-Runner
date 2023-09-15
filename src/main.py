@@ -16,6 +16,7 @@ from eggs.item import ItemEgg
 from eggs.talk import TalkEgg
 from eggs.summon import SummonEgg
 from eggs.effect import EffectEgg
+from eggs.creeper import CreeperEgg
 
 config: Config = {}
 
@@ -90,7 +91,8 @@ def lifetime() -> bool:
             ItemEgg(config),
             TalkEgg(config),
             SummonEgg(config),
-            EffectEgg(config)
+            EffectEgg(config),
+            CreeperEgg(config)
         ]
 
         try:
