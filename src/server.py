@@ -11,12 +11,6 @@ import backup
 
 MAX_LINES = 10000
 
-killed = False
-
-
-def was_killed() -> None:
-    return killed
-
 
 class CommandTimeout(Exception):
     pass
@@ -55,8 +49,6 @@ class Server:
                 continue
 
     def _do_kill(self) -> None:
-        global killed
-        killed = True
         self.killed = True
         self._cond.acquire()
         self._cond.notify_all()
@@ -121,6 +113,8 @@ class Server:
         self.logger.info(f'Running command: {command}')
         self.process.stdin.write(f'{command}\n')
         self.process.stdin.flush()
+        if not success_msg:
+            return ''
         return self.wait_for_output(success_msg, return_next_line=return_next_line)
 
     def save_game(self) -> None:

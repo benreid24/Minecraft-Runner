@@ -11,6 +11,13 @@ class RandomItem(TypedDict):
     max_qty: int
 
 
+class SummonCreature(TypedDict):
+    name: str
+    weight: float
+    min_qty: int
+    max_qty: int
+
+
 class Config(TypedDict):
     server_path: str
     start_command: List[str]
@@ -25,10 +32,13 @@ class Config(TypedDict):
     random_items: List[RandomItem]
     random_item_interval: int
 
+    summon_interval: int
+    summon_options: List[SummonCreature]
+
 
 DEFAULT_CONFIG: Config = {
     'server_path': '/galacticraft',
-    'start_command': ['java', '-Xmx8G', '-Dfml.queryResult=confirm', '-jar', 'forge-server.jar', 'nogui'],
+    'start_command': ['java', '-Xmx8G', '-Dfml.queryResult=confirm', '-jar', 'forge_server.jar', 'nogui'],
 
     'backup_path': '/home/ben/Dropbox/Galacticraft/Backups',
     'backup_interval': 20 * 60,
@@ -102,8 +112,57 @@ DEFAULT_CONFIG: Config = {
             'min_qty': 1,
             'max_qty': 4
         },
+    ],
+
+    'summon_interval': 2400,
+    'summon_options': [
+        {
+            'name': 'chicken',
+            'weight': 15,
+            'min_qty': 1,
+            'max_qty': 5
+        },
+        {
+            'name': 'ocelot',
+            'weight': 20,
+            'min_qty': 1,
+            'max_qty': 2
+        },
+        {
+            'name': 'cow',
+            'weight': 20,
+            'min_qty': 1,
+            'max_qty': 1
+        },
+        {
+            'name': 'zombie',
+            'weight': 20,
+            'min_qty': 2,
+            'max_qty': 7
+        },
+        {
+            'name': 'skeleton',
+            'weight': 20,
+            'min_qty': 2,
+            'max_qty': 6
+        },
+        {
+            'name': 'zombie',
+            'weight': 1,
+            'min_qty': 12,
+            'max_qty': 20
+        },
     ]
 }
+
+
+def merge_configs(existing: Config) -> None:
+    for key, value in DEFAULT_CONFIG.items():
+        if isinstance(value, dict) and key in existing and isinstance(DEFAULT_CONFIG[key], dict):
+            merge_configs(existing[key], value)
+        else:
+            if key not in existing:
+                existing[key] = value
 
 
 def config_dir() -> str:
@@ -118,14 +177,19 @@ def kill_file() -> str:
     return os.path.join(config_dir(), 'kill.txt')
 
 
+def write_config(config: Config) -> None:
+    config_path = os.path.join(config_dir(), 'config.json')
+    with open(config_path, 'w') as cfg:
+        cfg.write(json.dumps(config, indent=4))
+
+
 def load_config(logger: Optional[logging.Logger] = None) -> Config:
     if not logger:
         logger = logging.getLogger(__name__)
     config_path = os.path.join(config_dir(), 'config.json')
 
     if not os.path.isfile(config_path):
-        with open(config_path, 'w') as cfg:
-            cfg.write(json.dumps(DEFAULT_CONFIG, indent=4))
+        write_config(DEFAULT_CONFIG)
         return DEFAULT_CONFIG
     
     with open(config_path, 'r') as cfg:
@@ -137,7 +201,10 @@ def load_config(logger: Optional[logging.Logger] = None) -> Config:
                     if 'level-name' in item:
                         config['save_path'] = os.path.join(config['server_path'], item.split('=')[1])
                         break
-                return config
+
+            merge_configs(config)
+            write_config(config)
+            return config
         except Exception:
             logger.exception('Bad config, failed to load server properties')
             raise

@@ -4,18 +4,17 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
 import time
-import datetime
 import sys
-import random
 
 from server_config import pid_file, load_config, Config
 import backup
-from server import Server, CommandTimeout, was_killed
+from server import Server
 
 from eggs.egg import Egg
 from eggs.autosave import AutosaveEgg
 from eggs.item import ItemEgg
 from eggs.talk import TalkEgg
+from eggs.summon import SummonEgg
 
 config: Config = {}
 
@@ -88,7 +87,8 @@ def lifetime() -> bool:
         all_eggs: List[Egg] = [
             AutosaveEgg(config),
             ItemEgg(config),
-            TalkEgg(config)
+            TalkEgg(config),
+            SummonEgg(config)
         ]
 
         try:
@@ -132,14 +132,12 @@ def main():
     backup.init(config['backup_path'])
     logger.info('Manager initialized')
 
-    while True:
-        try:
-            if was_killed() or not lifetime():
-                break
-        except Exception:
-            logger.exception('Manager failed. Retrying')
-
-    logger.info('Manager exited normally')
+    try:
+        lifetime()
+    except Exception:
+        logger.exception('Manager failed')
+    else:
+        logger.info('Manager exited normally')
 
 
 if __name__ == '__main__':
