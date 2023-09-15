@@ -18,6 +18,14 @@ class SummonCreature(TypedDict):
     max_qty: int
 
 
+class Effect(TypedDict):
+    name: str
+    weight: float
+    level: int
+    duration: int
+    message: Optional[str]
+
+
 class Config(TypedDict):
     server_path: str
     start_command: List[str]
@@ -34,6 +42,9 @@ class Config(TypedDict):
 
     summon_interval: int
     summon_options: List[SummonCreature]
+
+    effect_interval: int
+    effect_options: List[Effect]
 
 
 DEFAULT_CONFIG: Config = {
@@ -151,6 +162,43 @@ DEFAULT_CONFIG: Config = {
             'weight': 1,
             'min_qty': 12,
             'max_qty': 20
+        },
+    ],
+
+    'effect_interval': 1200,
+    'effect_options': [
+        {
+            'name': 'levitation',
+            'weight': 10,
+            'duration': 4,
+            'level': 1
+        },
+        {
+            'name': 'glowing',
+            'weight': 20,
+            'duration': 30,
+            'level': 1,
+        },
+        {
+            'name': 'slowness',
+            'weight': 20,
+            'duration': 10,
+            'level': 3,
+            'message': '{player} suddenly gained weight'
+        },
+        {
+            'name': 'nausea',
+            'weight': 30,
+            'duration': 15,
+            'level': 255,
+            'message': '{player} must have eaten something bad'
+        },
+        {
+            'name': 'blindness',
+            'weight': 10,
+            'duration': 4,
+            'level': 1,
+            'message': 'Someone tell {player} to open their eyes!'
         },
     ]
 }

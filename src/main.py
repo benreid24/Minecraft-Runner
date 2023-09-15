@@ -15,6 +15,7 @@ from eggs.autosave import AutosaveEgg
 from eggs.item import ItemEgg
 from eggs.talk import TalkEgg
 from eggs.summon import SummonEgg
+from eggs.effect import EffectEgg
 
 config: Config = {}
 
@@ -88,18 +89,20 @@ def lifetime() -> bool:
             AutosaveEgg(config),
             ItemEgg(config),
             TalkEgg(config),
-            SummonEgg(config)
+            SummonEgg(config),
+            EffectEgg(config)
         ]
 
         try:
             while minecraft.should_run():
-                minecraft.sleep(5)  # 5 minutes
+                minecraft.sleep(60)
                 if not minecraft.should_run():
                     logger.info('Got stop command')
                     break
 
                 for egg in all_eggs:
                     egg.update(minecraft)
+                    time.sleep(30)
 
         except Exception:
             logger.exception('Got exception while running')

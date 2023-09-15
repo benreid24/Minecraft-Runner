@@ -20,4 +20,3 @@ class AutosaveEgg(Egg):
             self.logger.info('Saving game')
             server.save_game()
             self.logger.info('Save complete')
-            time.sleep(3)
