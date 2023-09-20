@@ -1,6 +1,5 @@
 import datetime
 import logging
-import time
 
 from server import Server
 from eggs.egg import Egg

@@ -18,9 +18,10 @@ class ItemEgg(Egg):
     def _do_update(self, server: Server) -> None:
         if datetime.datetime.now().timestamp() - self._last_time >= self._interval:
             if self._items and random.randrange(0, 100) <= 70:
+                self._last_time = datetime.datetime.now().timestamp()
+                
                 players = server.get_players()
                 if players:
-                    self._last_time = datetime.datetime.now().timestamp()
                     item = random.choices(
                         population=self._items,
                         weights=[item['weight']

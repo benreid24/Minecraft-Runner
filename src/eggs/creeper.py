@@ -10,7 +10,7 @@ class CreeperEgg(Egg):
     def __init__(self, config: Config) -> None:
         super().__init__('CreeperSound', False)
         self._last_time = datetime.datetime.now().timestamp()
-        self._interval = 0 # config['creeper_interval']
+        self._interval = config['creeper_interval']
 
     def _do_update(self, server: Server) -> None:
         if datetime.datetime.now().timestamp() - self._last_time >= self._interval:

@@ -19,9 +19,10 @@ class SummonEgg(Egg):
     def _do_update(self, server: Server) -> None:
         if datetime.datetime.now().timestamp() - self._last_time >= self._interval:
             if self._creatures and random.randrange(0, 100) <= 40:
+                self._last_time = datetime.datetime.now().timestamp()
+                
                 players = server.get_players()
                 if players:
-                    self._last_time = datetime.datetime.now().timestamp()
                     item = random.choices(
                         population=self._creatures,
                         weights=[item['weight']

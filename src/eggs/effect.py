@@ -1,7 +1,6 @@
 import datetime
 import logging
 import random
-import time
 
 from server import Server
 from eggs.egg import Egg
@@ -19,9 +18,10 @@ class EffectEgg(Egg):
     def _do_update(self, server: Server) -> None:
         if datetime.datetime.now().timestamp() - self._last_time >= self._interval:
             if self._effects and random.randrange(0, 100) <= 40:
+                self._last_time = datetime.datetime.now().timestamp()
+
                 players = server.get_players()
                 if players:
-                    self._last_time = datetime.datetime.now().timestamp()
                     item = random.choices(
                         population=self._effects,
                         weights=[item['weight']
