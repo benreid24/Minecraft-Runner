@@ -133,5 +133,5 @@ class Server:
             return []
 
         line = output[si+len(MARKER):]
-        players = [s.strip() for s in line.split(' ')]
+        players = [s.strip() for s in line.split(', ')]
         return [p for p in players if p]
