@@ -72,7 +72,8 @@ DEFAULT_CONFIG: Config = {
         'Criticality detected. Reactor meltdown imminent. Evacuate to a safe distance',
         'From the spice mines of Emperor Charizard',
         'If you love Corncob TV shows, it\'s time to tell Spectrum, "No."',
-        'I don\'t even want to be around anymore'
+        'I don\'t even want to be around anymore',
+        'Did you know that Void is short for Sir George Lord of the Void Ponyo Tzatziki Juan Pablo Pitter Pats Reid?'
     ],
 
     'random_item_interval': 30 * 60,
